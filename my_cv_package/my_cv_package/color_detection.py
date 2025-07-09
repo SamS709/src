@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 
 class ImageSubscriber(Node):
+    
     def __init__(self):
         super().__init__('image_subscriber')
         self.subscription = self.create_subscription(

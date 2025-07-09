@@ -17,6 +17,11 @@
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>cv2</exec_depend>
   <exec_depend>ultralytics</exec_depend>
+  <exec_depend>board</exec_depend>
+  <exec_depend>busio</exec_depend>
+  <exec_depend>adafruit_motor</exec_depend>
+  <exec_depend>adafruit_pca9685</exec_depend>
+
 
 
 
