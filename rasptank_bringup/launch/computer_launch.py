@@ -34,6 +34,11 @@ def generate_launch_description():
         arguments=["-topic", "robot_description", "-entity", "robot", "-x", "0.0", "-y", "0.0", "-z", "0.0"],
         output="screen")
     
+    get_camera = Node(
+        package = "my_cv_package",
+        executable= "face_detecter"
+    )
+    
    
 
     joint_state_publisher_gui_node = Node(
@@ -50,8 +55,9 @@ def generate_launch_description():
 
     return LaunchDescription([
         #joint_state_publisher_gui_node,
-        other_launch_file,
-        spawn_robot,
+        #other_launch_file,
+        #spawn_robot,
         robot_state_publisher_node,
-        rviz2_node
+        rviz2_node,
+        get_camera
     ])

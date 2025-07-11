@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             'color_detecter = my_cv_package.color_detection:main',
             'face_detecter = my_cv_package.face_detection:main',
-            'face_detecter_pi = my_cv_package.face_detection_pi:main',
+            'face_detecter_pi = my_cv_package.face_detection_pi2:main',
+            
         ],
     },
 )
