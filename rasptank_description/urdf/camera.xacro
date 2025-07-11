@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="camera_length" value="0.045"/>
+    <xacro:property name="camera_width" value="0.04"/>
+    <xacro:property name="camera_height" value="0.075"/>
+
+    
+    <link name="camera_link">
+        <visual>
+            <geometry>
+                <box size="${camera_length} ${camera_width} ${camera_height}" />
+            </geometry>
+            <origin xyz="0 0 ${camera_height / 2.0}" rpy="0 0 0" />
+            <material name="blue" />
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${camera_length} ${camera_width} ${camera_height}" />
+            </geometry>
+            <origin xyz="0 0 ${camera_height / 2.0}" rpy="0 0 0" />
+        </collision>
+        <xacro:box_inertia l="${2 * camera_length}" w="${2 * camera_width}" h="${2 * camera_height}" m="${5.0}" xyz = "0 0 ${2 * camera_height / 2.0}" rpy = "0 0 0" />
+    </link>
+
+    <link name = "frame_link"/>
+
+    <joint name="base_camera_joint" type="revolute">
+        <axis xyz="0 1 0"/>
+        <limit effort="1000.0" lower="0.0" upper="0.548" velocity="0.5"/>
+        <origin xyz = "${(base_length)/2.0} 0 ${base_height}" rpy="0 ${pi/2.0} 0"/>
+        <parent link="base_link"/>
+        <child link="camera_link"/>
+    </joint>
+
+    <joint name = "camera_frame_joint" type="fixed"> 
+        <parent link="camera_link" />
+        <child link ="frame_link"/>
+        <origin xyz = "${camera_length/2.0} 0 0.1" rpy="0 ${pi/2.0} ${pi/2.0}"/>
+    </joint>
+
+
+    <!-- <xacro:wheel_link side="left"/> -->
+    <!-- <xacro:wheel_link side="right"/> -->
+
+
+    <!-- <link name="caster_wheel_link">
+        <visual>
+            <geometry>
+                <sphere radius="${wheel_radius / 2.0}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="grey" />
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="${wheel_radius / 2.0}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </collision>
+        <xacro:sphere_inertia r="${2 * wheel_radius / 2.0}"  m="0.5" xyz = "0 0 0" rpy = "0 0 0"/>
+    </link> -->
+
+ 
+    <!-- <joint name="base_right_wheel_joint" type="continuous">
+        <parent link="camera_link" />
+        <child link="right_wheel_link" />
+        <origin xyz="-${camera_length / 4.0} -${(camera_width + wheel_length) / 2.0} 0" rpy="0 0 0" />
+        <axis xyz="0 1 0" />
+    </joint> -->
+
+    <!-- <joint name="base_left_wheel_joint" type="continuous">
+        <parent link="camera_link" />
+        <child link="left_wheel_link" />
+        <origin xyz="-${camera_length / 4.0} ${(camera_width + wheel_length) / 2.0} 0" rpy="0 0 0" />
+        <axis xyz="0 1 0" />
+    </joint> -->
+
+    <!-- <joint name="base_caster_wheel_joint" type="fixed">
+        <parent link="camera_link" />
+        <child link="caster_wheel_link" />
+        <origin xyz="0.2 0 -0.05" rpy="0 0 0" />
+    </joint> -->
+</robot> 
