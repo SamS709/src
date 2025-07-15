@@ -37,8 +37,8 @@ def get_angle(ID):
 
 
 if __name__ == "__main__":
-    channel = 0
-    angle = 90
+    channel = 4
+    angle = 95
     get_angle(channel)
     set_angle(channel,angle)
 
