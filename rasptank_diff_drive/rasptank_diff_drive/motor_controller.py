@@ -167,8 +167,9 @@ class MotorController(Node):
             left_speed_percent = min(100, abs(left_vel) / max_velocity * 100)
             right_speed_percent = min(100, abs(right_vel) / max_velocity * 100)
             
-            left_direction = 1 if left_vel >= 0 else -1
-            right_direction = 1 if right_vel >= 0 else -1
+            # Fix direction mapping - invert the directions to fix backward motion
+            left_direction = -1 if left_vel >= 0 else 1
+            right_direction = -1 if right_vel >= 0 else 1
             
             # Apply commands to motors
             # For differential drive: motor1 = left motor, motor2 = right motor
