@@ -86,12 +86,9 @@ def generate_launch_description():
         executable="rviz2",
     )
 
-    return LaunchDescription([
-        #joint_state_publisher_gui_node,
-        #other_launch_file,
-        #spawn_robot,
-        robot_state_publisher_node,
+    nodes = [robot_state_publisher_node,
         rviz2_node,
         get_camera,
-        teleop_node,
-    ])
+        teleop_node]
+
+    return LaunchDescription(declared_arguments + nodes)
