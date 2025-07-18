@@ -43,7 +43,7 @@ except ImportError as e:
 class CameraController(Node):
     def __init__(self):
         super().__init__('camera_controller')
-        self.change = 0.5
+        self.change = 3
         self.bounds = [98.0, 85.0]
         self.tolerance = 5 # Dead zone in pixels to prevent oscillation
         self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400, actuation_range=180)
