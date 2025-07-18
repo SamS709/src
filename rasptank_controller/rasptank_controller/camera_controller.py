@@ -43,9 +43,9 @@ except ImportError as e:
 class CameraController(Node):
     def __init__(self):
         super().__init__('camera_controller')
-        self.change = 3.0
-        self.bounds = [95.0,85.0]
-        self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400,actuation_range=180)
+        self.change = 1.0
+        self.bounds = [98.0, 85.0]
+        self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400, actuation_range=180)
         self.servo_angle.angle = 90.0
         self.subscription = self.create_subscription(
             Image,
