@@ -45,7 +45,7 @@ class CameraController(Node):
         super().__init__('camera_controller')
         self.change = 0.5
         self.bounds = [98.0, 85.0]
-        self.tolerance = 10  # Dead zone in pixels to prevent oscillation
+        self.tolerance = 5 # Dead zone in pixels to prevent oscillation
         self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400, actuation_range=180)
         self.servo_angle.angle = 90.0
         self.subscription = self.create_subscription(
