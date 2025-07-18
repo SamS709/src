@@ -53,7 +53,7 @@ except ImportError as e:
 class CameraController(Node):
     def __init__(self):
         super().__init__('camera_controller')
-        self.change = 1
+        self.change = 0.5
         self.bounds = [98.0, 85.0]
         self.tolerance = 5 # Dead zone in pixels to prevent oscillation
         self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400, actuation_range=180)
@@ -140,10 +140,10 @@ class CameraController(Node):
                     # Vertical tracking: face higher than center means servo goes up
                     if distance_from_center_y > self.tolerance:
                         if y0 < center_y - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
-                            angle = self.servo_angle.angle + self.change
+                            angle = self.servo_angle.angle - self.change
                             self.get_logger().info(f"Moving servo UP - Face at {y0:.1f}, center at {center_y:.1f}")
                         elif y0 > center_y + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
-                            angle = self.servo_angle.angle - self.change
+                            angle = self.servo_angle.angle + self.change
                             self.get_logger().info(f"Moving servo DOWN - Face at {y0:.1f}, center at {center_y:.1f}")
                     
                     # Draw rectangle around the nearest face
@@ -210,10 +210,10 @@ class CameraController(Node):
                     
                     if distance_from_center_y > self.tolerance:
                         if y0 < center_y - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
-                            angle = self.servo_angle.angle + self.change
+                            angle = self.servo_angle.angle - self.change
                             self.get_logger().info(f"Moving servo UP (OpenCV) - Face at {y0:.1f}, center at {center_y:.1f}")
                         elif y0 > center_y + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
-                            angle = self.servo_angle.angle - self.change
+                            angle = self.servo_angle.angle + self.change
                             self.get_logger().info(f"Moving servo DOWN (OpenCV) - Face at {y0:.1f}, center at {center_y:.1f}")
                     
                     cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
