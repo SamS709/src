@@ -131,9 +131,7 @@ class CameraController(Node):
                     # Draw rectangle around the nearest face
                     vid_bgr = cv2.cvtColor(vid, cv2.COLOR_RGB2BGR)
                     cv2.rectangle(vid_bgr, (x, y), (x + w, y + h), (0, 255, 0), 4)
-                    
-                    self.get_logger().info(f"Tracking nearest face - Area: {largest_area}, Center: ({x0:.1f}, {y0:.1f})")
-            
+                                
             # Only update servo and publish if we have a valid angle
             if angle is not None:
                 self.servo_angle.angle = angle
@@ -182,9 +180,7 @@ class CameraController(Node):
                     elif y0 < H/2 and self.servo_angle.angle > self.bounds[1] + self.change:
                         angle = self.servo_angle.angle - self.change
                     cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
-                    
-                    self.get_logger().info(f"Tracking nearest face (OpenCV) - Area: {largest_area}, Center: ({x0:.1f}, {y0:.1f})")
-                
+                                    
                 # Only update servo and publish if we have a valid angle
                 if angle is not None:
                     self.servo_angle.angle = angle
