@@ -45,6 +45,7 @@ class CameraController(Node):
         super().__init__('camera_controller')
         self.change = 0.5
         self.bounds = [98.0, 85.0]
+        self.tolerance = 50  # Dead zone in pixels to prevent oscillation
         self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400, actuation_range=180)
         self.servo_angle.angle = 90.0
         self.subscription = self.create_subscription(
@@ -122,16 +123,18 @@ class CameraController(Node):
                     x0 = x + w/2
                     y0 = y + h/2
                     
-                    # Control servo based on face position
-                    if y0 > H/2 and self.servo_angle.angle < self.bounds[0] - self.change:
+                    # Control servo based on face position with tolerance zone
+                    center_x = W/2
+                    if x0 < center_x - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
                         angle = self.servo_angle.angle + self.change
-                    elif y0 < H/2 and self.servo_angle.angle > self.bounds[1] + self.change:
+                    elif x0 > center_x + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
                         angle = self.servo_angle.angle - self.change
                     
                     # Draw rectangle around the nearest face
                     vid_bgr = cv2.cvtColor(vid, cv2.COLOR_RGB2BGR)
                     cv2.rectangle(vid_bgr, (x, y), (x + w, y + h), (0, 255, 0), 4)
-                                
+                    
+                    self.get_logger().info(f"Tracking nearest face - Area: {largest_area}, Center: ({x0:.1f}, {y0:.1f})")
             # Only update servo and publish if we have a valid angle
             if angle is not None:
                 self.servo_angle.angle = angle
@@ -170,14 +173,15 @@ class CameraController(Node):
                         largest_area = area
                         largest_face = (x, y, w, h)
                 
-                # Process only the largest (nearest) face
+                # Process only the largest (nearest) face with tolerance zone
                 if largest_face:
                     x, y, w, h = largest_face
                     x0 = x + w/2
                     y0 = y + h/2
-                    if y0 > H/2 and self.servo_angle.angle < self.bounds[0] - self.change:
+                    center_x = W/2
+                    if x0 < center_x - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
                         angle = self.servo_angle.angle + self.change
-                    elif y0 < H/2 and self.servo_angle.angle > self.bounds[1] + self.change:
+                    elif x0 > center_x + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
                         angle = self.servo_angle.angle - self.change
                     cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
                                     
