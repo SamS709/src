@@ -26,16 +26,18 @@ def generate_launch_description():
             description="Start robot with mock hardware mirroring command to its states.",
         )
     )
+    
     declared_arguments.append(
         DeclareLaunchArgument(
-            "teleop",
-            default_value="false",
-            description="Start teleop_twist_keyboard for manual control.",
+            "face_recognition",
+            default_value="true",
+            description="The robot moves the camera joint to follow the detected face.",
         )
     )
 
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    teleop = LaunchConfiguration("teleop")
+    face_recognition = LaunchConfiguration("face_recognition")
+
 
 # CAMERA
 
@@ -49,8 +51,9 @@ def generate_launch_description():
 
     # Subscribes to camera data to look at humans
     camera_controller_node = Node(
-        package="my_cv_package",
-        executable="face_detecter_pi",
+        package="rasptank_controller",
+        executable="camera_controller",
+        condition=IfCondition(face_recognition),
     )
 
 # ULTRASONIC SENSOR
