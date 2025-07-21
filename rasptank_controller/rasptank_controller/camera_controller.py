@@ -3,17 +3,7 @@
  SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
 # Import the PCA9685 module. Available in the bundle and here:
-#                    # Vertical tracking with tolerance zone
-                    center_y = H/2
-                    distance_from_center_y = abs(y0 - center_y)
-                    
-                    if distance_from_center_y > self.tolerance:
-                        if y0 < center_y - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
-                            angle = self.servo_angle.angle + self.change
-                            self.get_logger().info(f"Moving servo UP (OpenCV) - Face at {y0:.1f}, center at {center_y:.1f}")
-                        elif y0 > center_y + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
-                            angle = self.servo_angle.angle - self.change
-                            self.get_logger().info(f"Moving servo DOWN (OpenCV) - Face at {y0:.1f}, center at {center_y:.1f}")/github.com/adafruit/Adafruit_CircuitPython_PCA9685
+#   https://github.com/adafruit/Adafruit_CircuitPython_PCA9685
 # sudo pip3 install adafruit-circuitpython-motor
 # sudo pip3 install adafruit-circuitpython-pca9685
 '''
@@ -55,7 +45,6 @@ class CameraController(Node):
         super().__init__('camera_controller')
         self.change = 0.5
         self.bounds = [98.0, 85.0]
-        self.tolerance = 5 # Dead zone in pixels to prevent oscillation
         self.servo_angle = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2400, actuation_range=180)
         self.servo_angle.angle = 90.0
         self.subscription = self.create_subscription(
@@ -85,6 +74,8 @@ class CameraController(Node):
 
     
     def listener_callback(self, data):
+        self.get_logger().info('Receiving video frame')
+        
         # Skip processing if cv_bridge is not available
         if not CV_BRIDGE_AVAILABLE or self.br is None:
             self.get_logger().warn("cv_bridge not available - skipping face detection")
@@ -131,26 +122,20 @@ class CameraController(Node):
                     x0 = x + w/2
                     y0 = y + h/2
                     
-                    # Control servo based on face position with tolerance zone
-                    center_x = W/2
-                    center_y = H/2
-                    distance_from_center_x = abs(x0 - center_x)
-                    distance_from_center_y = abs(y0 - center_y)
-                    
-                    # Vertical tracking: face higher than center means servo goes up
-                    if distance_from_center_y > self.tolerance:
-                        if y0 < center_y - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
-                            angle = self.servo_angle.angle - self.change
-                            self.get_logger().info(f"Moving servo UP - Face at {y0:.1f}, center at {center_y:.1f}")
-                        elif y0 > center_y + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
-                            angle = self.servo_angle.angle + self.change
-                            self.get_logger().info(f"Moving servo DOWN - Face at {y0:.1f}, center at {center_y:.1f}")
+                    # Control servo based on face position (vertical tracking only)
+                    if y0 > H/2 and self.servo_angle.angle < self.bounds[0] - self.change:
+                        angle = self.servo_angle.angle + self.change  # Tilt down
+                    elif y0 < H/2 and self.servo_angle.angle > self.bounds[1] + self.change:
+                        angle = self.servo_angle.angle - self.change  # Tilt up
                     
                     # Draw rectangle around the nearest face
                     vid_bgr = cv2.cvtColor(vid, cv2.COLOR_RGB2BGR)
                     cv2.rectangle(vid_bgr, (x, y), (x + w, y + h), (0, 255, 0), 4)
-            # Only update servo and publish if angle has changed
-            if angle is not None and angle != self.servo_angle.angle:
+                    
+                    self.get_logger().info(f"Tracking nearest face - Area: {largest_area}, Center: ({x0:.1f}, {y0:.1f})")
+            # Only update servo and publish if we have a valid angle
+            print(angle)
+            if angle is not None:
                 self.servo_angle.angle = angle
                 msg = JointState()
                 msg.header.stamp = self.get_clock().now().to_msg()
@@ -187,39 +172,19 @@ class CameraController(Node):
                         largest_area = area
                         largest_face = (x, y, w, h)
                 
-                # Process only the largest (nearest) face with tolerance zone
+                # Process only the largest (nearest) face
                 if largest_face:
                     x, y, w, h = largest_face
                     x0 = x + w/2
                     y0 = y + h/2
-                    # center_x = W/2
-                    # distance_from_center = abs(x0 - center_x)
-                    
-                    # Horizontal tracking commented out for now
-                    # if distance_from_center > self.tolerance:
-                    #     if x0 < center_x - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
-                    #         angle = self.servo_angle.angle + self.change
-                    #         self.get_logger().info(f"Moving servo RIGHT (OpenCV) - Face at {x0:.1f}, center at {center_x:.1f}")
-                    #     elif x0 > center_x + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
-                    #         angle = self.servo_angle.angle - self.change
-                    #         self.get_logger().info(f"Moving servo LEFT (OpenCV) - Face at {x0:.1f}, center at {center_x:.1f}")
-                    
-                    # Vertical tracking with tolerance zone
-                    center_y = H/2
-                    distance_from_center_y = abs(y0 - center_y)
-                    
-                    if distance_from_center_y > self.tolerance:
-                        if y0 < center_y - self.tolerance and self.servo_angle.angle < self.bounds[0] - self.change:
-                            angle = self.servo_angle.angle - self.change
-                            self.get_logger().info(f"Moving servo UP (OpenCV) - Face at {y0:.1f}, center at {center_y:.1f}")
-                        elif y0 > center_y + self.tolerance and self.servo_angle.angle > self.bounds[1] + self.change:
-                            angle = self.servo_angle.angle + self.change
-                            self.get_logger().info(f"Moving servo DOWN (OpenCV) - Face at {y0:.1f}, center at {center_y:.1f}")
-                    
+                    if y0 > H/2 and self.servo_angle.angle < self.bounds[0] - self.change:
+                        angle = self.servo_angle.angle + self.change
+                    elif y0 < H/2 and self.servo_angle.angle > self.bounds[1] + self.change:
+                        angle = self.servo_angle.angle - self.change
                     cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
                                     
-                # Only update servo and publish if angle has changed
-                if angle is not None and angle != self.servo_angle.angle:
+                # Only update servo and publish if we have a valid angle
+                if angle is not None:
                     self.servo_angle.angle = angle
                     msg = JointState()
                     msg.header.stamp = self.get_clock().now().to_msg()
