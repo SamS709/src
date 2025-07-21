@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             "make_circles = rasptank_controller.make_circles:main",
             "camera_controller = rasptank_controller.camera_controller:main",
+            "ultrasonic_sensor_controller = rasptank_controller.ultrasonic_sensor_controller:main",
 
         ],
     },

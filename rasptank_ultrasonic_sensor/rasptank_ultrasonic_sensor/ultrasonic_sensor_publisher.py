@@ -5,6 +5,7 @@ import random
 import math
 from time import time
 
+
 # Try to import gpiozero for real hardware, fallback to mock for testing
 try:
     from gpiozero import DistanceSensor
@@ -37,15 +38,23 @@ class UltrasonicSensorPublisher(Node):
         self.echo_pin = 24
         
         # Initialize the ultrasonic sensor (real or mock)
+        self.get_logger().info(f'USE_REAL_SENSOR flag: {USE_REAL_SENSOR}')
+        
         try:
             if USE_REAL_SENSOR:
+                # Try to initialize real sensor
+                self.get_logger().info('Attempting to initialize real ultrasonic sensor...')
+                from gpiozero import DistanceSensor
                 self.sensor = DistanceSensor(echo=self.echo_pin, trigger=self.trigger_pin, max_distance=2)
-                self.get_logger().info('Using real ultrasonic sensor')
+                self.get_logger().info('Successfully initialized real ultrasonic sensor')
             else:
+                self.get_logger().info('USE_REAL_SENSOR is False, using mock sensor')
                 self.sensor = MockDistanceSensor(echo=self.echo_pin, trigger=self.trigger_pin, max_distance=2)
                 self.get_logger().info('Using mock ultrasonic sensor for testing')
         except Exception as e:
-            self.get_logger().warn(f'Failed to initialize real sensor, using mock: {e}')
+            self.get_logger().error(f'Failed to initialize real sensor - Error: {str(e)}')
+            self.get_logger().error(f'Error type: {type(e).__name__}')
+            self.get_logger().warn('Falling back to mock sensor')
             self.sensor = MockDistanceSensor(echo=self.echo_pin, trigger=self.trigger_pin, max_distance=2)
         
         # Create publisher for frontal robot distance
@@ -73,7 +82,9 @@ class UltrasonicSensorPublisher(Node):
             msg = Float32()
             msg.data = distance
             self.publisher_.publish(msg)
-            self.get_logger().debug(f'Published distance: {distance:.2f} cm')
+            self.get_logger().info(f'Published distance: {distance:.2f} cm')
+        else:
+            self.get_logger().warn('Failed to get valid distance reading')
 
 
 def main(args=None):
@@ -85,9 +96,9 @@ def main(args=None):
         rclpy.spin(ultrasonic_publisher)
     except KeyboardInterrupt:
         pass
-    finally:
-        ultrasonic_publisher.destroy_node()
-        rclpy.shutdown()
+    
+    ultrasonic_publisher.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == '__main__':
