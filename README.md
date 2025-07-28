@@ -1,6 +1,6 @@
 # README.md
 
-## Ros2 package for rasptank robot:
+## Ros2 package for rasptank robot (in developpement):
 <ul>
   <li>
     DiffDrive Controller implemented from ros2_control (adapted to rasptank hardware)
