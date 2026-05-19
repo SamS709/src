@@ -2,15 +2,15 @@ import math
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import TwistStamped
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist
+from turtlesim.msg import Pose
 
 
-class UnicycleDynamicFeedbackNode(Node):
-    """Dynamic feedback linearization controller adapted to use /diffbot_base_controller/odom."""
+class UnicycleDynamicFeedbackTurtleNode(Node):
+    """Dynamic feedback controller for turtlesim (pose -> cmd_vel)."""
 
     def __init__(self) -> None:
-        super().__init__("unicycle_dynamic_feedback")
+        super().__init__("unicycle_dynamic_feedback_turtle")
 
         self.declare_parameter("control_rate_hz", 30.0)
         self.declare_parameter("kp1", 2.0)
@@ -19,8 +19,8 @@ class UnicycleDynamicFeedbackNode(Node):
         self.declare_parameter("kd2", 7.0)
         self.declare_parameter("xi0", 0.6)
         self.declare_parameter("goal_stop_radius", 0.01)
-        self.declare_parameter("goal_x", 0.0)
-        self.declare_parameter("goal_y", 0.0)
+        self.declare_parameter("goal_x", 5.5)
+        self.declare_parameter("goal_y", 5.5)
 
         self.kp1 = float(self.get_parameter("kp1").value)
         self.kd1 = float(self.get_parameter("kd1").value)
@@ -38,9 +38,9 @@ class UnicycleDynamicFeedbackNode(Node):
         self.v_meas = 0.0
         self.goal_reached = False
 
-        # Publisher to /cmd_vel and subscriber to /odom
-        self.cmd_pub = self.create_publisher(TwistStamped, "cmd_vel", 10)
-        self.create_subscription(Odometry, "/diffbot_base_controller/odom", self._odom_cb, 10)
+        # Publisher to /turtle1/cmd_vel and subscriber to /turtle1/pose
+        self.cmd_pub = self.create_publisher(Twist, "/turtle1/cmd_vel", 10)
+        self.create_subscription(Pose, "/turtle1/pose", self._pose_cb, 10)
 
         rate = float(self.get_parameter("control_rate_hz").value)
         self.dt = 1.0 / rate if rate > 0.0 else 0.02
@@ -48,21 +48,13 @@ class UnicycleDynamicFeedbackNode(Node):
 
         self.t0 = self.get_clock().now()
 
-        self.get_logger().info("Unicycle dynamic-feedback node started (odom->cmd_vel)")
+        self.get_logger().info("Turtlesim controller started (/turtle1/pose -> /turtle1/cmd_vel)")
 
-    def _odom_cb(self, msg: Odometry) -> None:
-        # Extract pose
-        self.x = msg.pose.pose.position.x
-        self.y = msg.pose.pose.position.y
-
-        # Quaternion to yaw
-        q = msg.pose.pose.orientation
-        # yaw extraction (assuming quaternion normalized)
-        self.theta = math.atan2(2.0 * (q.w * q.z + q.x * q.y),
-                                1.0 - 2.0 * (q.y * q.y + q.z * q.z))
-
-        # Use linear x from odometry twist as measured forward speed
-        self.v_meas = msg.twist.twist.linear.x
+    def _pose_cb(self, msg: Pose) -> None:
+        self.x = float(msg.x)
+        self.y = float(msg.y)
+        self.theta = float(msg.theta)
+        self.v_meas = float(msg.linear_velocity)
         self.pose_ready = True
 
     def _desired_trajectory(self, t: float):
@@ -88,7 +80,6 @@ class UnicycleDynamicFeedbackNode(Node):
         self.xi += xi_dot * self.dt
 
         v_cmd = self.xi
-        # Avoid division by zero
         omega_cmd = 0.0
         if abs(self.xi) > 1e-6:
             omega_cmd = (-u1 * math.sin(self.theta) + u2 * math.cos(self.theta)) / self.xi
@@ -100,25 +91,23 @@ class UnicycleDynamicFeedbackNode(Node):
             if not self.goal_reached:
                 self.goal_reached = True
                 self.get_logger().info(
-                    f"Goal reached at ({self.goal_x:.3f}, {self.goal_y:.3f}), "
-                    f"radius={self.goal_stop_radius:.3f}"
+                    "Turtle goal reached at (%.3f, %.3f), radius=%.3f" %
+                    (self.goal_x, self.goal_y, self.goal_stop_radius)
                 )
             v_cmd = 0.0
             omega_cmd = 0.0
         else:
             self.goal_reached = False
 
-        msg = TwistStamped()
-        # Stamp for controllers that require TwistStamped
-        msg.header.stamp = now.to_msg()
-        msg.twist.linear.x = float(v_cmd)
-        msg.twist.angular.z = float(omega_cmd)
+        msg = Twist()
+        msg.linear.x = float(v_cmd)
+        msg.angular.z = float(omega_cmd)
         self.cmd_pub.publish(msg)
 
 
 def main(args=None) -> None:
     rclpy.init(args=args)
-    node = UnicycleDynamicFeedbackNode()
+    node = UnicycleDynamicFeedbackTurtleNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

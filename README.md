@@ -76,3 +76,14 @@ ros2 run rasptank_enrico_paper rasptank_enrico_paper_node --ros-args -p goal_x:=
 
 If the node does not respond or you don't see `/cmd_vel` being published, check that the `diffbot_base_controller` is active and that `/odom` is available (or remap it to the correct topic).
 
+### TURTLE SIM
+
+```bash
+ros2 run turtlesim turtlesim_node
+```
+```bash
+ros2 run rasptank_enrico_paper rasptank_enrico_paper_turtle_node --ros-args \
+  -p goal_x:=8.0 -p goal_y:=8.0 \
+  -p control_rate_hz:=30.0 -p kp1:=1.2 -p kd1:=2.5 -p kp2:=1.6 -p kd2:=2.2 \
+  -p xi0:=0.6 -p goal_stop_radius:=0.2
+```

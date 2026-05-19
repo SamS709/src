@@ -18,7 +18,8 @@ setup(
     license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            'rasptank_enrico_paper_node = rasptank_enrico_paper.enrico_paper_node:main'
+            'rasptank_enrico_paper_node = rasptank_enrico_paper.enrico_paper_node:main',
+            'rasptank_enrico_paper_turtle_node = rasptank_enrico_paper.enrico_paper_node_turtle:main'
         ],
     },
 )
